@@ -71,5 +71,15 @@ Screenshots of the captured packets are included in the `images/` folder.
 5. Check notifications or packet logs (if networked).
 
 ---
+---
+
+## Credits & Contributors
+
+This project was a collaborative effort by the following team members:
+
+- **Shashank G** 
+- **Dhanush K S**  
+- **Kiran M**
+
 
 
