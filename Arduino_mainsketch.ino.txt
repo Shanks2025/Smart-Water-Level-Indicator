@@ -1,0 +1,86 @@
+#define BLYNK_TEMPLATE_ID "TMPL3AWCcT7w4"
+#define BLYNK_TEMPLATE_NAME "Smart Water Management"
+#define BLYNK_AUTH_TOKEN "VfsFv1duda8g2za77IvFleLc-IOYsiyJ"
+
+#define WIFI_SSID "Ujwal_Reddy_ML" //Paste your Wifi name
+#define WIFI_PASS "Ujwal@987" //Paste the password 
+
+#define TRIG_PIN 17
+#define ECHO_PIN 16
+
+
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+#include <WiFi.h>
+#include <BlynkSimpleEsp32.h>
+
+const int MaxLevel = 20;
+
+LiquidCrystal_I2C lcd(0x27, 16, 2); 
+
+void setup() {
+  Serial.begin(115200);
+  Wire.begin(21, 22); 
+
+  lcd.init();
+  lcd.backlight();
+  lcd.setCursor(0, 0);
+  lcd.print(" Water Level ");
+  lcd.setCursor(0, 1);
+  lcd.print(" Monitoring...");
+  delay(2000);
+  lcd.clear();
+
+  pinMode(TRIG_PIN, OUTPUT);
+  pinMode(ECHO_PIN, INPUT);
+
+  Blynk.begin(BLYNK_AUTH_TOKEN, WIFI_SSID, WIFI_PASS);
+  Serial.print("Connected! ESP IP: ");
+  Serial.println(WiFi.localIP());
+}
+
+void loop() {
+  Blynk.run();
+
+  digitalWrite(TRIG_PIN, LOW);
+  delayMicroseconds(2);
+  digitalWrite(TRIG_PIN, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIG_PIN, LOW);
+
+  long duration = pulseIn(ECHO_PIN, HIGH, 30000); 
+  int distance = duration * 0.034 / 2;
+
+  int waterLevel = MaxLevel - distance;
+  if (distance > MaxLevel || distance == 0) {
+    waterLevel = 0;
+  }
+
+  int waterPercent = (waterLevel * 100) / MaxLevel;
+
+  lcd.setCursor(0, 0);
+  lcd.print("Level: ");
+  if (waterLevel > 0) {
+    lcd.print(waterPercent);
+    lcd.print("%       ");
+  } else {
+    lcd.print("Out of Range ");
+  }
+
+  Serial.println("------ Water Status ------");
+  Serial.print("Distance: ");
+  Serial.print(distance);
+  Serial.println(" cm");
+  Serial.print("Water Level: ");
+  Serial.print(waterLevel);
+  Serial.print(" cm (");
+  Serial.print(waterPercent);
+  Serial.println("%)");
+  Serial.println("--------------------------\n");
+
+  Blynk.virtualWrite(V0, waterPercent); // Water percentage
+  Blynk.virtualWrite(V1, waterLevel);   // Water level in cm
+
+  delay(1000); // 1-second delay
+}
+
